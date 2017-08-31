@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>simplekvdb</title>
+    <link rel="stylesheet" href="css/uikit.min.css" />
+    <link rel="stylesheet" href="css/uikit.almost-flat.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css">
+    <script src="js/jquery-2.2.3.min.js"></script>
+    <script src="js/uikit.min.js"></script>
+    <script src="js/navigo.min.js"></script>
+    <script src="js/4.0.5_handlebars.min.js"></script>
+  </head>
+  <body>
+
+    <div class="uk-container uk-container-center uk-margin-top uk-margin-small-bottom">
+      <nav class="uk-navbar uk-margin-large-bottom">
+        <a class="uk-navbar-brand uk-hidden-small" href="/">simplekvdb</a>
+        <ul class="uk-navbar-nav uk-hidden-small">
+          <li>
+            <a href="/">Buckets</a>
+          </li>
+          <li>
+            <a href="#/help">Help</a>
+          </li>
+        </ul>
+        <a href="#offcanvas" class="uk-navbar-toggle uk-visible-small" data-uk-offcanvas></a>
+        <div class="uk-navbar-brand uk-navbar-center uk-visible-small">Brand</div>
+      </nav>
+    </div>
+
+    <div class="uk-width-medium-1-2 uk-container-center" style="width: 250px;" id="vw_buckets">
+      <div class="uk-grid">
+          <div class="uk-width-medium-1-1">
+              <div>
+                <form class="uk-panel uk-panel-box uk-form">
+                  <div class="uk-form-row">
+                    <input class="uk-width-1-1 uk-form-large" type="text" id="bucket_name" placeholder="Bucket name">
+                  </div>
+                  <div class="uk-form-row">
+                    <a class="uk-width-1-1 uk-button uk-button-primary uk-button-small" onclick="createBucket()">Create Bucket</a>
+                  </div>
+                </form>
+              </div>
+          </div>
+          <div class="uk-width-medium-1-1">
+              <div class="uk-panel uk-panel-box uk-panel-box-primary">
+                <h3 class="uk-panel-title">Buckets<hr></h3>
+                <div id="vw_buckets_list"></div>
+              </div>
+          </div>
+      </div>
+    </div>
+
+    <div class="uk-width-medium-1-2 uk-container-center" style="width: 550px;" id="vw_bucket_content">
+      <div class="uk-grid">
+          <div class="uk-width-medium-1-1">
+              <div>
+                <form class="uk-panel uk-panel-box uk-form">
+                  <div class="uk-form-row">
+                    <input class="uk-width-2-5 uk-form-medium" type="text" id="bkey" placeholder="Key">
+                    <input class="uk-width-2-5 uk-form-medium" type="text" id="bvalue" placeholder="Value">
+                    <a class="uk-form-width-mini uk-button uk-button-primary" onclick="createKeyValue()" id="btn_create_update">Create</a>
+                  </div>
+                </form>
+              </div>
+          </div>
+          <div class="uk-width-medium-1-1">
+              <div class="uk-panel uk-panel-box uk-panel-box-primary">
+                <h3 class="uk-panel-title" id="pbucket"></h3>
+                <hr/>
+                <div id="vw_bucket_content_list"></div>
+              </div>
+          </div>
+      </div>
+    </div>
+
+<div class="uk-width-medium-1-2 uk-container-center" style="width: 550px;" id="vw_help">
+      <div class="uk-grid">
+          <div class="uk-width-medium-1-1">
+              <div class="uk-panel uk-panel-box uk-panel-box-primary">
+                <h3 class="uk-panel-title" id="pbucket">Help</h3>
+                <hr/>
+                <div>
+                  <h4>List Buckets</h4>
+                  <pre><code>~# curl -X GET http://localhost:8081/api/
+[{"bucket":"bucket1"}, {"bucket":"bucket2"}]</code></pre>
+                  <h4>Create Bucket</h4>
+                  <pre><code>~# curl -X POST http://localhost:8081/api/bucket3</code></pre>
+                  <h4>Delete Bucket</h4>
+                  <pre><code>~# curl -X DELETE http://localhost:8081/api/bucket3</code></pre>
+                  <br/>
+                  <h4>List KeyValues</h4>
+                  <pre><code>~# curl -X GET http://localhost:8081/api/bucket1
+[{"key":"key1","value":"value1"},{"key":"key2","value":"value2"}]</code></pre>
+                  <h4>Create KeyValue</h4>
+                  <pre><code>~# curl -X POST http://localhost:8081/api/bucket1/key1/value1</code></pre>
+                  <h4>Delete KeyValue</h4>
+                  <pre><code>~# curl -X DELETE http://localhost:8081/api/bucket1/key1</code></pre>
+                  <br/>
+                  <h4>Get Value</h4>
+                  <pre><code>~# curl -X GET http://localhost:8081/api/bucket1/key1
+{"value":"value1"}</code></pre>
+                </div>
+              </div>
+          </div>
+      </div>
+    </div>
+
+    <script id="tmpl_buckets" type="x-tmpl-mustache">
+      <table class="uk-table">
+        <tbody>
+        {{#list}}
+          <tr>
+            <td class="uk-width-4-5"><a onclick="listBucketContent('{{bucket}}')">{{bucket}}</a></td>
+            <td><a onclick="deleteBucket('{{bucket}}')"><i class="fa fa-times"></i></a></td>
+          </tr>
+        {{/list}}
+        </tbody>
+      </table>
+    </script>
+
+    <script id="tmpl_kv" type="x-tmpl-mustache">
+      <table class="uk-table">
+        <thead>
+          <tr>
+            <th class="uk-width-2-5">Key</th>
+            <th class="uk-width-2-5">Value</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+        {{#each list}}
+          <tr>
+            <td> {{key}} </td> 
+            <td> {{value}}</td>
+            <td> 
+              <a onclick="updateKeyValue('{{key}}', '{{value}}')"><i class="fa fa-pencil"></i></a>
+              <a onclick="deleteKeyValue('{{key}}')"><i class="fa fa-times"></i></a>
+            </td>
+          </tr>
+        {{/each}}
+        </tbody>
+      </table>
+    </script>
+
+    <script>
+      var router = new Navigo();
+      router.on('/help', function () {
+        $('#vw_buckets').hide();
+        $('#vw_bucket_content').hide();
+        $('#vw_help').show();
+      });
+      router.on('/bucketcontent', function () {
+        $('#vw_buckets').hide();
+        $('#vw_help').hide();
+        $('#vw_bucket_content').show();
+      });
+      router.on('/', function () {
+        $('#vw_bucket_content').hide();
+        $('#vw_help').hide();
+        $('#vw_buckets').show();
+      });
+      router.on(function() {});
+      router.resolve();
+
+      function loadVwBucketList() {
+        var source = $('#tmpl_buckets').html();
+        var template = Handlebars.compile(source);
+        $.get("/api/",{},function(data){
+          var buckets = JSON.parse(data);
+          if (buckets.length > 0){
+            var html = template({list: buckets});
+            $('#vw_buckets_list').html(html);
+          }else{
+            $('#vw_buckets_list').html("");
+          }
+        });
+      }
+      function createBucket(){
+        $.post("/api/" + $('#bucket_name').val());
+        wait(200);
+        $('#bucket_name').val("").select();
+        loadVwBucketList();
+      }
+      function deleteBucket(bucket_name){
+        $.ajax({ url: "/api/" + bucket_name, type: 'DELETE'});
+        wait(200);
+        loadVwBucketList();
+      }
+      function listBucketContent(bucketname){
+        $('#vw_bucket_content_list').html("")
+        $('#pbucket').text(bucketname);
+        var source = $('#tmpl_kv').html();
+        var template = Handlebars.compile(source);
+        $.get("/api/" + bucketname,{},function(data){
+          var html = template({list: JSON.parse(data)});
+          $('#vw_bucket_content_list').html(html)
+        });
+        router.navigate('#/bucketcontent');
+        $('#bkey').select();
+      }
+      function createKeyValue(){
+        $('#bkey').prop("readonly", false);
+        $.post("/api/" + $('#pbucket').text() + "/" + $('#bkey').val() + "/" + $('#bvalue').val());
+        wait(200);
+        listBucketContent($('#pbucket').text());
+        $('#btn_create_update').text("Create");
+        $('#bkey').val("");
+        $('#bvalue').val("");
+      }
+      function updateKeyValue(key, value){
+        $('#bkey').val(key).prop("readonly", true);
+        $('#bvalue').val(value).select();
+        $('#btn_create_update').text("Update");
+      }
+      function deleteKeyValue(key){
+        $.ajax({ url: "/api/" + $('#pbucket').text() + "/" + key, type: 'DELETE'});
+        wait(200);
+        listBucketContent($('#pbucket').text());
+      }
+      function wait(ms){
+        var start = new Date().getTime();
+        var end = start;
+        while(end < start + ms) {
+          end = new Date().getTime();
+        }
+      }
+      $( document ).ready(function() {
+        loadVwBucketList();
+      });
+    </script>
+  </body>
+</html>
