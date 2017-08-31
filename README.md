@@ -5,6 +5,7 @@ Very basic Key-Value store with REST API and UI based on BoldDB
 
 A simple build script which pulls the dependency and builds the binary
 ```bash
+cd $GOPATH/src/github.com/vigorcrust/simple-kvdb
 go run build.go
 ```
 
