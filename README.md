@@ -1,6 +1,13 @@
 # simple-kvdb
 Very basic Key-Value store with REST API and UI based on BoldDB
 
+## Build
+
+A simple build script which pulls the dependency and builds the binary
+```bash
+go run build.go
+```
+
 ## REST API Usage
 
 ### List buckets
